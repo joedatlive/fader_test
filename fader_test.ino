@@ -5,6 +5,7 @@
 
 #include <ADC.h>
 // this code is not on github  https://github.com/joedatlive/fader_test.git
+//Yay!!!
 ADC *adc = new ADC();  //adc object
 int iLed = 23;
 float fFaderVolts = 0.0; 
