@@ -4,6 +4,7 @@ ADC *adc = new ADC();  //adc object
 int LedPin = 23;
 int MidiCC = 7; // set the midi Control Change to common volume setting
 int MidiChannel = 1; //User midi channel 1
+int FaderPotDataOld = 0;
 
 // the setup routine runs once when you press reset:
 void setup() {
@@ -14,10 +15,16 @@ void setup() {
 // the loop routine runs over and over again forever:
 void loop() {
   int FaderPotData = getAnalogData(A0); //this is the 10bit value from Fader after analogue to digital conversion.
-  int FaderMidiData = bitShift(FaderPotData, 3); //This will hold the 7bit mapping value to send to midi
-  while (usbMIDI.read()) {}  // controllers must call .read() to keep the queue clear even if they are not responding to MIDI
-  usbMIDI.sendControlChange(MidiCC, FaderMidiData, MidiChannel);
-  blinkLight(500, 500);
+
+  // lets check to see if the data changed, plus or minus 8
+  // we want to avoid "jitter" and we will lose this level of granuliaty when we convert to 7 bits
+  if (FaderPotDataOld > (FaderPotData + 8) or FaderPotDataOld < (FaderPotData - 8)){
+    int FaderMidiData = bitShift(FaderPotData, 3); //This will hold the 7bit mapping value to send to midi
+    while (usbMIDI.read()) {}  // controllers must call .read() to keep the queue clear even if they are not responding to MIDI
+    usbMIDI.sendControlChange(MidiCC, FaderMidiData, MidiChannel);
+    FaderPotDataOld = FaderPotData;
+  }
+  blinkLight(10, 10);
 }
 
 int getAnalogData(int port) {
