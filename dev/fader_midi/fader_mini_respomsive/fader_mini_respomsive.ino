@@ -22,7 +22,7 @@ int iLed = 23;
 // define the analog pins to use
 const int FADER_PINS[A_PINS] = {A0};
 // define the CCID number to send fader input to midi
-const int CCID[A_PINS] = {1};
+const int CCID[A_PINS] = {7};
 //The standard and most common ones are 1 mod, 2 breath, 7 volume, and 11 expression.
 
 // create a data array and a old copy to tell when MIDI changes are required
@@ -47,14 +47,15 @@ void loop() {
 
 void getAnalogData(){  
   for (int i=0;i<A_PINS;i++){
+    blinkLight(2000, 2000);
    // update the ResponsiveAnalogRead object every loop
     analog[i].update(); 
     // if the repsonse value has change, sebd to midi cc
     if(analog[i].hasChanged()) {
-      blinkLight(2000);
+      blinkLight(1000, 1000);
       data[i] = analog[i].getValue()>>3;
       if (data[i] != dataOld[i]){
-        blinkLight(200);
+        blinkLight(500, 500);
         dataOld[i] = data[i];
         usbMIDI.sendControlChange(CCID[i], data[i], channel);
       }
@@ -62,9 +63,9 @@ void getAnalogData(){
   }
 }
 
-void blinkLight(int wait) {
+void blinkLight(int wait1, int wait2) {
    analogWrite(iLed, 255);   // turn the LED on (using Pulse Width Modulation to change intesity) to signal when volts are being read (testing)
-   delay(500);               // wait for a second
+   delay(wait1);               // wait for a second
    analogWrite(iLed, 0);   // turn the LED off (using Pulse Width Modulation to change intesity)
-   delay(wait);               // wait for a second
+   delay(wait2);               // wait for a second
 }
