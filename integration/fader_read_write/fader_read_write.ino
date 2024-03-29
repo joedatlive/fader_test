@@ -14,23 +14,20 @@ void setup() {
 
 // the loop routine runs over and over again forever:
 void loop() {
-  int FaderPotData = getAnalogData(A0); //this is the 10bit value from Fader after analogue to digital conversion.
+  getAnalogData(A0); //read the data coming from the analog slider and write it to midi control change
+  delay(10);
+}
 
+void getAnalogData(int port) {
+// Read the value from the fader potentiomenter 
+  int FaderPotData = adc->analogRead(port); //Analog digital converter to read voltage coming from vader variable resistor. A0 mapps to pin 14 and is on ADC0_SE5b
   // lets check to see if the data changed, plus or minus 8
   // we want to avoid "jitter" and we will lose this level of granuliaty when we convert to 7 bits
   if (FaderPotDataOld > (FaderPotData + 8) or FaderPotDataOld < (FaderPotData - 8)){
     int FaderMidiData = bitShift(FaderPotData, 3, true); //This will variable hold the 7bit mapping value to send to midi
-    while (usbMIDI.read()) {}  // controllers must call .read() to keep the queue clear even if they are not responding to MIDI
     usbMIDI.sendControlChange(MidiCC, FaderMidiData, MidiChannel);
     FaderPotDataOld = FaderPotData;
   }
-  blinkLight(10, 10);
-}
-
-int getAnalogData(int port) {
-// Read the value from the fader potentiomenter 
-  int FaderPot = adc->analogRead(port); //Analog digital converter to read voltage coming from vader variable resistor. A0 mapps to pin 14 and is on ADC0_SE5b
-  return FaderPot;
 }
 
 int bitShift(int InputBits, int ShiftCount, bool isRightShift){
