@@ -41,7 +41,9 @@ void onControlChange(uint8_t channel, uint8_t control, uint8_t value){
      int FaderPotData10 = adc->analogRead(A0); 
      while (FaderMidiData10 < (FaderPotData10 - 8)) {
       //move the slider down 8 bits
-      FaderPotData10 = FaderPotData10 - 8; //this will get replaced with a function to move the motor
+      //this will get replaced with a function to move the motor.
+      //we should be able to use the motor controller with a fucntion that passes the "sensor" value and the "target" value
+      FaderPotData10 = FaderPotData10 - 8; 
       blinkLight(1000,500);
       //FaderPotData10 = adc->analogRead(A0); will need this once we can actually move the motor
      }
