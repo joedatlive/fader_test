@@ -10,24 +10,48 @@ int FaderPotDataOld = 0;
 void setup() {
   // initialize the digital pin as an output.
   pinMode(LedPin, OUTPUT);
+  //iniitalize midi for reading CC
+  usbMIDI.setHandleControlChange(onControlChange);
 }
 
 // the loop routine runs over and over again forever:
 void loop() {
-  getAnalogData(A0); //read the data coming from the analog slider and write it to midi control change
+  //*******Slider to Teensy to MIDI to DAW********
+  //read analog port voltage to see if slider moved
+  int FaderPotData10 = adc->analogRead(A0); //Analog digital converter to read voltage coming from vader variable resistor. A0 mapps to pin 14 and is on ADC0_SE5b
+  //check if data changed enough and bit shift form 10bits to 7 if it did
+  if (FaderPotDataOld > (FaderPotData10 + 8) or FaderPotDataOld < (FaderPotData10 - 8)){
+    int FaderPotData7 = bitShift(FaderPotData10, 3, true); //This will variable hold the 7bit mapping value to send to midi
+    //write the Pot data to midi
+    usbMIDI.sendControlChange(MidiCC, FaderPotData7, MidiChannel); //write the data to the Midi Channel
+    FaderPotDataOld = FaderPotData10; //reset the current setting to the Old setting to see if it changes in the future
+  }
+  //*******DAW to MIDO to Teensy to slider********
+  //read midi data to see if DAW changed fader
+  while(usbMIDI.read()){} //read midi channel for updates on Control Change and do something
   delay(10);
 }
 
-void getAnalogData(int port) {
-// Read the value from the fader potentiomenter 
-  int FaderPotData = adc->analogRead(port); //Analog digital converter to read voltage coming from vader variable resistor. A0 mapps to pin 14 and is on ADC0_SE5b
-  // lets check to see if the data changed, plus or minus 8
-  // we want to avoid "jitter" and we will lose this level of granuliaty when we convert to 7 bits
-  if (FaderPotDataOld > (FaderPotData + 8) or FaderPotDataOld < (FaderPotData - 8)){
-    int FaderMidiData = bitShift(FaderPotData, 3, true); //This will variable hold the 7bit mapping value to send to midi
-    usbMIDI.sendControlChange(MidiCC, FaderMidiData, MidiChannel);
-    FaderPotDataOld = FaderPotData;
-  }
+void onControlChange(uint8_t channel, uint8_t control, uint8_t value){
+  if(control == MidiCC){
+     blinkLight(1000,500);
+     //convert the Midi 7 bit to 10 bits
+     int FaderMidiData10 = bitShift(value, 3, false); //This will variable hold the 10 bit mapping of the midi value to compare to the fader analog setting
+     //until slider is within 8 bits of value
+     int FaderPotData10 = adc->analogRead(A0); 
+     while (FaderMidiData10 < (FaderPotData10 - 8)) {
+      //move the slider down 8 bits
+      FaderPotData10 = FaderPotData10 - 8; //this will get replaced with a function to move the motor
+      blinkLight(1000,500);
+      //FaderPotData10 = adc->analogRead(A0); will need this once we can actually move the motor
+     }
+     while (FaderMidiData10 > (FaderPotData10 - 8)) {
+      //move the slider up 8 bits
+       FaderPotData10 = FaderPotData10 + 8; //this will get replaced with a function to move the motor
+      blinkLight(1000,500);
+      //int FaderPotData10 = adc->analogRead(A0); will need this once we can actually move the motor
+     }
+   }
 }
 
 int bitShift(int InputBits, int ShiftCount, bool isRightShift){

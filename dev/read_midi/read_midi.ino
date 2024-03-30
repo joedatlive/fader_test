@@ -21,3 +21,11 @@ void onControlChange(uint8_t channel, uint8_t control, uint8_t value){
    blinkLight(1000,500);
   }
 }
+
+// function to blink the led
+void blinkLight(int wait1, int wait2) {
+   analogWrite(LedPin, 255);   // turn the LED on (using Pulse Width Modulation to change intesity) to signal when volts are being read (testing)
+   delay(wait1);               // wait for a second
+   analogWrite(LedPin, 0);   // turn the LED off (using Pulse Width Modulation to change intesity)
+   delay(wait2);               // wait for sometime
+}
